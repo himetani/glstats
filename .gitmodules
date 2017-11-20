@@ -1,0 +1,3 @@
+[submodule "glstats-sample-submodule"]
+	path = glstats-sample-submodule
+	url = https://github.com/himetani/glstats-sample.git
