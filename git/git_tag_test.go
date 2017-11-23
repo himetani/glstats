@@ -20,7 +20,7 @@ func TestAnalyze(t *testing.T) {
 	expected := []TagCount{
 		{time: t0, cnt: 0},
 		{time: t1, cnt: 0},
-		{time: t2, cnt: 1},
+		{time: t2, cnt: 3},
 	}
 
 	actual, err := gt.Analyze("deploy", times)
