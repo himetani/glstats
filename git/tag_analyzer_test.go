@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func TestAnalyze(t *testing.T) {
-	gt := &GitTag{
+func TestTagAnalyze(t *testing.T) {
+	ta := &TagAnalyzer{
 		path: "../glstats-sample-submodule",
 	}
 
@@ -23,7 +23,7 @@ func TestAnalyze(t *testing.T) {
 		{time: t2, cnt: 3},
 	}
 
-	actual, err := gt.Analyze("deploy", times)
+	actual, err := ta.Analyze("deploy", times)
 	if err != nil {
 		t.Fatal("Analyze returnen non-nil\n")
 	}

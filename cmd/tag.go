@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/himetani/glstats/util"
+	"github.com/himetani/glstats/timeutil"
 	"github.com/spf13/cobra"
 )
 
@@ -45,7 +45,7 @@ func init() {
 }
 
 func (c *Tag) execute() {
-	dates, _ := util.Divide(tagFlags.since, tagFlags.until, util.MONTH)
+	dates, _ := timeutil.Divide(tagFlags.since, tagFlags.until, timeutil.MONTH)
 
 	fmt.Fprintf(os.Stdout, "%s\n", dates)
 }

@@ -6,11 +6,11 @@ import (
 	"github.com/libgit2/git2go"
 )
 
-type GitCommit struct {
+type CommitAnalyzer struct {
 	path string
 }
 
-func (g *GitCommit) Analyze(str string) ([]TaggedCommit, error) {
+func (g *CommitAnalyzer) Analyze(str string) ([]TaggedCommit, error) {
 	repo, _ := git.OpenRepository(g.path)
 
 	commitMap := map[string][]*git.Oid{}

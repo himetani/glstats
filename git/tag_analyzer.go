@@ -7,15 +7,11 @@ import (
 	"github.com/libgit2/git2go"
 )
 
-type Analyzer interface {
-	Analyze()
-}
-
-type GitTag struct {
+type TagAnalyzer struct {
 	path string
 }
 
-func (g *GitTag) Analyze(str string, times []time.Time) ([]TagCount, error) {
+func (g *TagAnalyzer) Analyze(str string, times []time.Time) ([]TagCount, error) {
 	repo, _ := git.OpenRepository(g.path)
 	walk, _ := repo.Walk()
 	err := walk.PushHead()

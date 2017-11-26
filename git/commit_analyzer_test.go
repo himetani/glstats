@@ -5,7 +5,7 @@ import (
 )
 
 func TestCommitAnalyze(t *testing.T) {
-	gc := &GitCommit{
+	ca := &CommitAnalyzer{
 		path: "../glstats-sample-submodule",
 	}
 
@@ -17,7 +17,7 @@ func TestCommitAnalyze(t *testing.T) {
 		{revision: "264f0767fb0cb4f34eb49d63022a443cefb75783", cnt: 1},
 		{revision: "01bb16f3d083fa252c4476f6419a4b2761f4a839", cnt: 0},
 	}
-	tcs, err := gc.Analyze("deploy")
+	tcs, err := ca.Analyze("deploy")
 	if err != nil {
 		t.Fatal("Analyze return non-nil\n")
 	}
