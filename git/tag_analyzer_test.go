@@ -8,7 +8,7 @@ import (
 
 func TestTagAnalyze(t *testing.T) {
 	ta := &TagAnalyzer{
-		path: "../glstats-sample-submodule",
+		Path: "../glstats-sample-submodule",
 	}
 
 	t0 := time.Date(2017, time.Month(9), 1, 0, 0, 0, 0, time.Local)
@@ -18,9 +18,9 @@ func TestTagAnalyze(t *testing.T) {
 	times := []time.Time{t0, t1, t2}
 
 	expected := []TagCount{
-		{time: t0, cnt: 0},
-		{time: t1, cnt: 0},
-		{time: t2, cnt: 3},
+		{Time: t0, Cnt: 0},
+		{Time: t1, Cnt: 0},
+		{Time: t2, Cnt: 3},
 	}
 
 	actual, err := ta.Analyze("deploy", times)

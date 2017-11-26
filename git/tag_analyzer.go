@@ -8,25 +8,25 @@ import (
 )
 
 type TagAnalyzer struct {
-	path string
+	Path string
 }
 
 func (g *TagAnalyzer) Analyze(str string, times []time.Time) ([]TagCount, error) {
-	repo, _ := git.OpenRepository(g.path)
+	repo, _ := git.OpenRepository(g.Path)
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {
 		return nil, err
 	}
 
-	tags := []time.Time{}
+	tagTimes := []time.Time{}
 
 	repo.Tags.Foreach(func(name string, oid *git.Oid) error {
 		if strings.Contains(name, str) {
 			o, _ := repo.Lookup(oid)
 			tag, _ := o.AsTag()
 			tTime := tag.Tagger().When
-			tags = append(tags, tTime)
+			tagTimes = append(tagTimes, tTime)
 		}
 		return nil
 	})
@@ -34,24 +34,13 @@ func (g *TagAnalyzer) Analyze(str string, times []time.Time) ([]TagCount, error)
 	tcs := []TagCount{}
 	for _, time := range times {
 		cnt := 0
-		for _, tag := range tags {
+		for _, tag := range tagTimes {
 			if tag.After(time) && time.AddDate(0, 1, 0).After(tag) {
 				cnt++
 			}
 		}
-		tcs = append(tcs, TagCount{time: time, cnt: cnt})
+		tcs = append(tcs, TagCount{Time: time, Cnt: cnt})
 	}
-
-	/*
-		callback := func(c *git.Commit) bool {
-			return true
-		}
-
-		err = walk.Iterate(callback)
-		if err != nil {
-			fmt.Printf(err.Error())
-		}
-	*/
 
 	return tcs, nil
 }

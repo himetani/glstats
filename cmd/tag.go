@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/himetani/glstats/git"
 	"github.com/himetani/glstats/timeutil"
+
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -45,7 +48,21 @@ func init() {
 }
 
 func (c *Tag) execute() {
-	dates, _ := timeutil.Divide(tagFlags.since, tagFlags.until, timeutil.MONTH)
+	times, err := timeutil.Divide(tagFlags.since, tagFlags.until, timeutil.MONTH)
+	if err != nil {
+		fmt.Errorf("%s\n", err.Error())
+	}
 
-	fmt.Fprintf(os.Stdout, "%s\n", dates)
+	analyzer := &git.TagAnalyzer{
+		Path: tagFlags.repo,
+	}
+
+	tagCnts, err := analyzer.Analyze("deploy", times)
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Month", "Count"})
+	for _, tc := range tagCnts {
+		table.Append([]string{tc.Time.Format("2006-01"), fmt.Sprint(tc.Cnt)})
+	}
+	table.Render()
 }
