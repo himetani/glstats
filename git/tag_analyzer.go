@@ -23,9 +23,23 @@ func (g *TagAnalyzer) Analyze(str string, times []time.Time) ([]TagCount, error)
 
 	repo.Tags.Foreach(func(name string, oid *git.Oid) error {
 		if strings.Contains(name, str) {
+			var tTime time.Time
+			layout := "200601021504"
+
 			o, _ := repo.Lookup(oid)
-			tag, _ := o.AsTag()
-			tTime := tag.Tagger().When
+			switch o.Type() {
+			// For annotated tag
+			case git.ObjectTag:
+				tag, _ := o.AsTag()
+				tTime = tag.Tagger().When
+			// For lightweight tag
+			case git.ObjectCommit:
+				tstr := strings.Replace(name, "refs/tags/"+str+"/", "", -1)
+				tTime, err = time.Parse(layout, tstr)
+				if err != nil {
+					return nil
+				}
+			}
 			tagTimes = append(tagTimes, tTime)
 		}
 		return nil
