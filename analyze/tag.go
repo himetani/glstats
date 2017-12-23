@@ -1,18 +1,26 @@
-package git
+package analyze
 
 import (
 	"strings"
 	"time"
 
-	"github.com/libgit2/git2go"
+	git "github.com/libgit2/git2go"
 )
 
-type TagAnalyzer struct {
-	Path string
+type TagCount struct {
+	Time time.Time
+	Cnt  int
 }
 
-func (g *TagAnalyzer) Analyze(str string, times []time.Time) ([]TagCount, error) {
-	repo, _ := git.OpenRepository(g.Path)
+type TaggedCommit struct {
+	tags      []*git.Oid
+	oid       *git.Oid
+	next      *git.Oid
+	prev      *git.Oid
+	commitCnt int
+}
+
+func CountTag(repo *git.Repository, str string, times []time.Time) ([]TagCount, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {

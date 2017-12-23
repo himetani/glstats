@@ -1,15 +1,17 @@
-package git
+package analyze
 
 import (
 	"reflect"
 	"testing"
 	"time"
+
+	git "github.com/libgit2/git2go"
 )
 
 func TestTagAnalyze(t *testing.T) {
-	ta := &TagAnalyzer{
-		Path: "../glstats-sample-submodule",
-	}
+
+	repoPath := "../glstats-sample-submodule"
+	repo, _ := git.OpenRepository(repoPath)
 
 	t0 := time.Date(2017, time.Month(9), 1, 0, 0, 0, 0, time.Local)
 	t1 := time.Date(2017, time.Month(10), 1, 0, 0, 0, 0, time.Local)
@@ -23,7 +25,7 @@ func TestTagAnalyze(t *testing.T) {
 		{Time: t2, Cnt: 3},
 	}
 
-	actual, err := ta.Analyze("deploy", times)
+	actual, err := CountTag(repo, "deploy", times)
 	if err != nil {
 		t.Fatal("Analyze returnen non-nil\n")
 	}

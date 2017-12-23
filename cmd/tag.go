@@ -24,8 +24,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/himetani/glstats/git"
+	"github.com/himetani/glstats/analyze"
 	"github.com/himetani/glstats/timeutil"
+	git "github.com/libgit2/git2go"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -73,11 +74,9 @@ func (c *Tag) execute() {
 		fmt.Errorf("%s\n", err.Error())
 	}
 
-	analyzer := &git.TagAnalyzer{
-		Path: tagFlags.repo,
-	}
+	repo, _ := git.OpenRepository(tagFlags.repo)
 
-	tagCnts, err := analyzer.Analyze("deploy", times)
+	tagCnts, err := analyze.CountTag(repo, "deploy", times)
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Month", "Count"})
