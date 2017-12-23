@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -41,7 +42,6 @@ type TagFlags struct {
 	//substr       string
 	//since        time.Time
 	//until        time.Time
-	repo string
 }
 
 type Tag struct{}
@@ -50,31 +50,32 @@ var tagFlags = &TagFlags{}
 
 // countTagCmd represents the countTag command
 var tagCmd = &cobra.Command{
-	Use:   "tag",
-	Short: "Count commits having tags by month",
-	Long: `Count commits having tags by month
-
-`,
-	Run: func(cmd *cobra.Command, args []string) {
-		tag := &Tag{}
-		tag.execute()
-	},
+	Use:   "tag [repo]",
+	Short: "Count commits having tags (default: by month)",
+	Long:  `Count commits having tags (default: by month)`,
 }
 
 func init() {
-	tagCmd.Flags().StringVarP(&tagFlags.repo, "repo", "r", "", "Specify the git path")
 	tagCmd.Flags().StringVarP(&tagFlags.since, "since", "s", "", "Since date to be analyzed. Format is YYYY-MM-DD(default: 2014-01-01")
 	tagCmd.Flags().StringVarP(&tagFlags.until, "until", "u", "", "Until date to be analyzed. Format is YYYY-MM-DD(default: now)")
+
+	tagCmd.RunE = tagExec
 	RootCmd.AddCommand(tagCmd)
 }
 
-func (c *Tag) execute() {
-	times, err := timeutil.Divide(tagFlags.since, tagFlags.until, timeutil.MONTH)
-	if err != nil {
-		fmt.Errorf("%s\n", err.Error())
+func tagExec(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return errors.New("Argument are invlid")
 	}
 
-	repo, _ := git.OpenRepository(tagFlags.repo)
+	repoPath := args[0]
+
+	times, err := timeutil.Divide(tagFlags.since, tagFlags.until, timeutil.MONTH)
+	if err != nil {
+		return err
+	}
+
+	repo, _ := git.OpenRepository(repoPath)
 
 	tagCnts, err := analyze.CountTag(repo, "deploy", times)
 
@@ -84,4 +85,6 @@ func (c *Tag) execute() {
 		table.Append([]string{tc.Time.Format("2006-01"), fmt.Sprint(tc.Cnt)})
 	}
 	table.Render()
+
+	return nil
 }
