@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/himetani/glstats/analyze"
 	"github.com/himetani/glstats/timeutil"
@@ -36,12 +37,6 @@ import (
 type TagFlags struct {
 	since string
 	until string
-	//rname        string
-	//input        string
-	//output       string
-	//substr       string
-	//since        time.Time
-	//until        time.Time
 }
 
 type Tag struct{}
@@ -56,9 +51,6 @@ var tagCmd = &cobra.Command{
 }
 
 func init() {
-	tagCmd.Flags().StringVarP(&tagFlags.since, "since", "s", "", "Since date to be analyzed. Format is YYYY-MM-DD(default: 2014-01-01")
-	tagCmd.Flags().StringVarP(&tagFlags.until, "until", "u", "", "Until date to be analyzed. Format is YYYY-MM-DD(default: now)")
-
 	tagCmd.RunE = tagExec
 	RootCmd.AddCommand(tagCmd)
 }
@@ -70,14 +62,14 @@ func tagExec(cmd *cobra.Command, args []string) error {
 
 	repoPath := args[0]
 
-	times, err := timeutil.Divide(tagFlags.since, tagFlags.until, timeutil.MONTH)
-	if err != nil {
-		return err
-	}
+	times := timeutil.GetTimesUntil(time.Now(), duration, timeutil.MONTH)
 
 	repo, _ := git.OpenRepository(repoPath)
 
 	tagCnts, err := analyze.CountTag(repo, "deploy", times)
+	if err != nil {
+		return err
+	}
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Month", "Count"})
