@@ -19,7 +19,7 @@ func TestTagAnalyze(t *testing.T) {
 
 	times := []time.Time{t0, t1, t2}
 
-	expected := []TagCount{
+	expected := []Count{
 		{Time: t0, Cnt: 0},
 		{Time: t1, Cnt: 0},
 		{Time: t2, Cnt: 3},

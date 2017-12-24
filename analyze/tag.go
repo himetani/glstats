@@ -7,7 +7,7 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-type TagCount struct {
+type Count struct {
 	Time time.Time
 	Cnt  int
 }
@@ -24,7 +24,7 @@ const (
 	layout string = "200601021504"
 )
 
-func CountTag(repo *git.Repository, substr string, times []time.Time) ([]TagCount, error) {
+func CountTag(repo *git.Repository, substr string, times []time.Time) ([]Count, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {
@@ -33,7 +33,7 @@ func CountTag(repo *git.Repository, substr string, times []time.Time) ([]TagCoun
 
 	timestamps := getTimestamps(repo, substr)
 
-	counts := []TagCount{}
+	counts := []Count{}
 	for _, time := range times {
 		cnt := 0
 		for _, tag := range timestamps {
@@ -41,7 +41,7 @@ func CountTag(repo *git.Repository, substr string, times []time.Time) ([]TagCoun
 				cnt++
 			}
 		}
-		counts = append(counts, TagCount{Time: time, Cnt: cnt})
+		counts = append(counts, Count{Time: time, Cnt: cnt})
 	}
 
 	return counts, nil
