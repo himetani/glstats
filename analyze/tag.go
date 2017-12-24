@@ -20,49 +20,53 @@ type TaggedCommit struct {
 	commitCnt int
 }
 
-func CountTag(repo *git.Repository, str string, times []time.Time) ([]TagCount, error) {
+const (
+	layout string = "200601021504"
+)
+
+func CountTag(repo *git.Repository, substr string, times []time.Time) ([]TagCount, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {
 		return nil, err
 	}
 
-	tagTimes := []time.Time{}
+	timestamps := getTimestamps(repo, substr)
 
-	repo.Tags.Foreach(func(name string, oid *git.Oid) error {
-		if strings.Contains(name, str) {
-			var tTime time.Time
-			layout := "200601021504"
-
-			o, _ := repo.Lookup(oid)
-			switch o.Type() {
-			// For annotated tag
-			case git.ObjectTag:
-				tag, _ := o.AsTag()
-				tTime = tag.Tagger().When
-			// For lightweight tag
-			case git.ObjectCommit:
-				tstr := strings.Replace(name, "refs/tags/"+str+"/", "", -1)
-				tTime, err = time.Parse(layout, tstr)
-				if err != nil {
-					return nil
-				}
-			}
-			tagTimes = append(tagTimes, tTime)
-		}
-		return nil
-	})
-
-	tcs := []TagCount{}
+	counts := []TagCount{}
 	for _, time := range times {
 		cnt := 0
-		for _, tag := range tagTimes {
+		for _, tag := range timestamps {
 			if tag.After(time) && time.AddDate(0, 1, 0).After(tag) {
 				cnt++
 			}
 		}
-		tcs = append(tcs, TagCount{Time: time, Cnt: cnt})
+		counts = append(counts, TagCount{Time: time, Cnt: cnt})
 	}
 
-	return tcs, nil
+	return counts, nil
+}
+
+func getTimestamps(repo *git.Repository, substr string) []time.Time {
+	var timestamps []time.Time
+
+	repo.Tags.Foreach(func(name string, oid *git.Oid) error {
+		if strings.Contains(name, substr) {
+			var t time.Time
+
+			o, _ := repo.Lookup(oid)
+			switch o.Type() {
+			case git.ObjectTag: // For annotated tag
+				tag, _ := o.AsTag()
+				t = tag.Tagger().When
+			case git.ObjectCommit: // For lightweight tag
+				tstr := strings.Replace(name, "refs/tags/"+substr+"/", "", -1)
+				t, _ = time.Parse(layout, tstr)
+			}
+			timestamps = append(timestamps, t)
+		}
+		return nil
+	})
+
+	return timestamps
 }
