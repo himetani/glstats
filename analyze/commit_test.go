@@ -2,12 +2,12 @@ package analyze
 
 import (
 	"testing"
+
+	git "github.com/libgit2/git2go"
 )
 
-func TestCommitAnalyze(t *testing.T) {
-	ca := &CommitAnalyzer{
-		path: "../glstats-sample-submodule",
-	}
+func TestCommitCount(t *testing.T) {
+	repo, _ := git.OpenRepository("../glstats-sample-submodule")
 
 	expected := []struct {
 		revision string
@@ -17,12 +17,12 @@ func TestCommitAnalyze(t *testing.T) {
 		{revision: "264f0767fb0cb4f34eb49d63022a443cefb75783", cnt: 1},
 		{revision: "01bb16f3d083fa252c4476f6419a4b2761f4a839", cnt: 0},
 	}
-	tcs, err := ca.Analyze("deploy")
+	taggedCommits, err := CountCommit(repo, "deploy")
 	if err != nil {
 		t.Fatal("Analyze return non-nil\n")
 	}
 
-	for i, tc := range tcs {
+	for i, tc := range taggedCommits {
 		if tc.oid.String() != expected[i].revision || tc.commitCnt != expected[i].cnt {
 			t.Fatalf("exected was %x, but was %x\n", expected[i], tc)
 		}

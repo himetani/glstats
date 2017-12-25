@@ -12,14 +12,6 @@ type Tag struct {
 	Cnt  int
 }
 
-type TaggedCommit struct {
-	tags      []*git.Oid
-	oid       *git.Oid
-	next      *git.Oid
-	prev      *git.Oid
-	commitCnt int
-}
-
 const (
 	layout string = "200601021504"
 )

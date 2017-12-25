@@ -10,9 +10,7 @@ type CommitAnalyzer struct {
 	path string
 }
 
-func (g *CommitAnalyzer) Analyze(str string) ([]TaggedCommit, error) {
-	repo, _ := git.OpenRepository(g.path)
-
+func CountCommit(repo *git.Repository, str string) ([]TaggedCommit, error) {
 	commitMap := map[string][]*git.Oid{}
 	tcs := []TaggedCommit{}
 

@@ -8,7 +8,7 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-func TestTagAnalyze(t *testing.T) {
+func TestCountTag(t *testing.T) {
 
 	repoPath := "../glstats-sample-submodule"
 	repo, _ := git.OpenRepository(repoPath)
