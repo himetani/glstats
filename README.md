@@ -4,6 +4,6 @@
 - [X] Package refactoring
 - [X] Command args parameter refactoring
 - [X] Use duration parameter
-- [ ] CountTag refactoring
+- [X] CountTag refactoring
 - [ ] Command args error handling
 - [ ] go dep
