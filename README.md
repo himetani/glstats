@@ -6,5 +6,5 @@
 - [X] Use duration parameter
 - [X] CountTag refactoring
 - [X] CountCommit refactoring
+- [X] go dep
 - [ ] Command args error handling
-- [ ] go dep
