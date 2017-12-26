@@ -33,15 +33,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type TagFlags struct {
-	since string
-	until string
-}
-
-type Tag struct{}
-
-var tagFlags = &TagFlags{}
-
 // countTagCmd represents the countTag command
 var tagCmd = &cobra.Command{
 	Use:   "tag [repo]",
