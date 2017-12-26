@@ -7,4 +7,5 @@
 - [X] CountTag refactoring
 - [X] CountCommit refactoring
 - [X] go dep
+- [ ] cgo libgit2 static or dynamic?
 - [ ] Command args error handling
