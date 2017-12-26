@@ -23,6 +23,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -33,6 +34,14 @@ var (
 	cfgFile  string
 	duration int
 	dayFlag  bool
+)
+
+type DurationType int
+
+const (
+	DAY DurationType = iota
+	MONTH
+	YEAR
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -76,4 +85,36 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func GetTimesUntil(until time.Time, num int, durationType DurationType) []time.Time {
+	var since time.Time
+	var times []time.Time
+
+	switch durationType {
+	case MONTH:
+		since = until.AddDate(0, -num, 0)
+	case DAY:
+		since = until.AddDate(0, 0, -num)
+	default:
+		since = until
+	}
+
+	for i := 0; ; i++ {
+		var t time.Time
+		switch durationType {
+		case MONTH:
+			t = since.AddDate(0, i, 0)
+		case DAY:
+			since = since.AddDate(0, 0, i)
+		default:
+		}
+
+		if t.After(until) || t.Equal(until) {
+			break
+		}
+		times = append(times, t)
+	}
+
+	return times
 }

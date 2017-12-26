@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/himetani/glstats/analyze"
-	"github.com/himetani/glstats/timeutil"
 	git "github.com/libgit2/git2go"
 
 	"github.com/olekukonko/tablewriter"
@@ -62,7 +61,7 @@ func tagExec(cmd *cobra.Command, args []string) error {
 
 	repoPath := args[0]
 
-	times := timeutil.GetTimesUntil(time.Now(), duration, timeutil.MONTH)
+	times := GetTimesUntil(time.Now(), duration, MONTH)
 
 	repo, _ := git.OpenRepository(repoPath)
 
