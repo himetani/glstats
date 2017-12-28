@@ -23,7 +23,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
 
+	"github.com/himetani/glstats/analyze"
+	git "github.com/libgit2/git2go"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -45,22 +49,18 @@ func commitExec(cmd *cobra.Command, args []string) error {
 
 	repoPath := args[0]
 
-	fmt.Println(repoPath)
+	repo, _ := git.OpenRepository(repoPath)
+	taggedCommits, err := analyze.CountCommit(repo, "deploy")
+	if err != nil {
+		return err
+	}
 
-	/*
-		repo, _ := git.OpenRepository(repoPath)
-		taggedCommits, err := analyze.CountCommit(repo, "deploy")
-		if err != nil {
-			return err
-		}
-
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Month", "Count"})
-		for _, tc := range taggedCommits {
-			table.Append([]string{"hoge", fmt.Sprint(tc.Cnt)})
-		}
-		table.Render()
-	*/
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Tag", "Commit Count"})
+	for _, tc := range taggedCommits {
+		table.Append([]string{fmt.Sprint(tc.Tags), fmt.Sprint(tc.Cnt)})
+	}
+	table.Render()
 
 	return nil
 }
