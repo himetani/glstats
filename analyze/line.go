@@ -57,12 +57,13 @@ func CountLine(repo *git.Repository, str string) ([]CommitWithLine, error) {
 	}
 	walk.Iterate(setFirst)
 
-	defaultOpt, _ := git.DefaultDiffOptions()
+	defaultOpts, _ := git.DefaultDiffOptions()
+	defaultDiffOpts, _ := git.DefaultDiffFindOptions()
 
 	construct := func(c *git.Commit) bool {
 		if tags, ok := commitWithTagMap[c.Id().String()]; ok {
 			childCommit, _ := repo.LookupCommit(tag_p)
-			ins, del, _ := getInsAndDel(repo, c, childCommit, &defaultOpt)
+			ins, del, _ := getInsAndDel(repo, c, childCommit, &defaultOpts, &defaultDiffOpts)
 			cwl = append(cwl, CommitWithLine{
 				Tags: prev_tags,
 				Oid:  tag_p,
@@ -95,14 +96,15 @@ func CountLine(repo *git.Repository, str string) ([]CommitWithLine, error) {
 	return cwl, nil
 }
 
-func getInsAndDel(r *git.Repository, o, c *git.Commit, opt *git.DiffOptions) (int, int, error) {
+func getInsAndDel(r *git.Repository, o, c *git.Commit, opts *git.DiffOptions, diffOpts *git.DiffFindOptions) (int, int, error) {
 	if o == nil {
 		return 0, 0, nil
 	}
 	tree, _ := c.Tree()
 	oldTree, _ := o.Tree()
 
-	diff, _ := r.DiffTreeToTree(oldTree, tree, opt)
+	diff, _ := r.DiffTreeToTree(oldTree, tree, opts)
+	diff.FindSimilar(diffOpts)
 	stats, _ := diff.Stats()
 	return stats.Insertions(), stats.Deletions(), nil
 }
