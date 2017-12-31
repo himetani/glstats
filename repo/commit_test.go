@@ -1,4 +1,4 @@
-package analyze
+package repo
 
 import (
 	"testing"
@@ -23,7 +23,7 @@ func TestCommitCount(t *testing.T) {
 	}
 
 	for i, tc := range taggedCommits {
-		if tc.oid.String() != expected[i].revision || tc.commitCnt != expected[i].cnt {
+		if tc.Oid.String() != expected[i].revision || tc.Cnt != expected[i].cnt {
 			t.Fatalf("exected was %x, but was %x\n", expected[i], tc)
 		}
 	}

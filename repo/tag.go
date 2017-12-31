@@ -1,4 +1,4 @@
-package analyze
+package repo
 
 import (
 	"strings"
@@ -16,14 +16,14 @@ const (
 	layout string = "200601021504"
 )
 
-func CountTag(repo *git.Repository, substr string, times []time.Time) ([]Tag, error) {
+func CountTagBy(repo *git.Repository, tagSubstr string, times []time.Time) ([]Tag, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {
 		return nil, err
 	}
 
-	timestamps := getTimestamps(repo, substr)
+	timestamps := getTagTimestamps(repo, tagSubstr)
 
 	counts := []Tag{}
 	for _, time := range times {
@@ -39,11 +39,11 @@ func CountTag(repo *git.Repository, substr string, times []time.Time) ([]Tag, er
 	return counts, nil
 }
 
-func getTimestamps(repo *git.Repository, substr string) []time.Time {
+func getTagTimestamps(repo *git.Repository, tagSubstr string) []time.Time {
 	var timestamps []time.Time
 
 	repo.Tags.Foreach(func(name string, oid *git.Oid) error {
-		if strings.Contains(name, substr) {
+		if strings.Contains(name, tagSubstr) {
 			var t time.Time
 
 			o, _ := repo.Lookup(oid)
@@ -52,7 +52,7 @@ func getTimestamps(repo *git.Repository, substr string) []time.Time {
 				tag, _ := o.AsTag()
 				t = tag.Tagger().When
 			case git.ObjectCommit: // For lightweight tag
-				tstr := strings.Replace(name, "refs/tags/"+substr+"/", "", -1)
+				tstr := strings.Replace(name, "refs/tags/"+tagSubstr+"/", "", -1)
 				t, _ = time.Parse(layout, tstr)
 			}
 			timestamps = append(timestamps, t)

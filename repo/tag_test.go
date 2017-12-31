@@ -1,4 +1,4 @@
-package analyze
+package repo
 
 import (
 	"reflect"
@@ -8,7 +8,7 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-func TestCountTag(t *testing.T) {
+func TestCountTagBy(t *testing.T) {
 
 	repoPath := "../glstats-sample-submodule"
 	repo, _ := git.OpenRepository(repoPath)
@@ -25,7 +25,7 @@ func TestCountTag(t *testing.T) {
 		{Time: t2, Cnt: 3},
 	}
 
-	actual, err := CountTag(repo, "deploy", times)
+	actual, err := CountTagBy(repo, "deploy", times)
 	if err != nil {
 		t.Fatal("Analyze returnen non-nil\n")
 	}
