@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/himetani/glstats/repo"
+	"github.com/himetani/glstats/stats"
 	git "github.com/libgit2/git2go"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -36,23 +36,21 @@ import (
 // countTagCmd represents the countTag command
 var tagCmd = &cobra.Command{
 	Use:   "tag [repoPath] [tagSubStr]",
-	Short: "Count commits having tags (default: by month)",
-	Long:  `Count commits having tags (default: by month)`,
+	Short: "Show stats by tag",
+	Long:  `Show stats by tag`,
 }
 
 var (
-	all            bool
-	countTag       bool
-	countCommit    bool
-	countInsAndDel bool
+	all        bool
+	count      bool
+	commitStat bool
 )
 
 func init() {
 	tagCmd.RunE = tagExec
 	tagCmd.Flags().BoolVar(&all, "all", false, "Show all stats(--count-tag, --count-commit, --count-ins-and-del)")
-	tagCmd.Flags().BoolVar(&countTag, "count-tag", false, "Show the summary of tag number counted by month ")
-	tagCmd.Flags().BoolVar(&countCommit, "count-commit", false, "Show the summary of commit number counted by tag")
-	tagCmd.Flags().BoolVar(&countInsAndDel, "count-ins-and-del", false, "Show the summary of insertions and deletions line number counted by tag")
+	tagCmd.Flags().BoolVar(&count, "count", false, "Show the summary of tag number counted by month ")
+	tagCmd.Flags().BoolVar(&commitStat, "commit-stat", false, "Show the summary of commit statistics summaried by tag")
 	RootCmd.AddCommand(tagCmd)
 }
 
@@ -66,14 +64,17 @@ func tagExec(cmd *cobra.Command, args []string) error {
 
 	times := GetTimesUntil(time.Now(), duration, MONTH)
 
-	r, _ := git.OpenRepository(repoPath)
+	repo, err := git.OpenRepository(repoPath)
+	if err != nil {
+		return err
+	}
 
-	if !(countTag || countCommit || countInsAndDel) {
+	if !(count || commitStat) {
 		all = true
 	}
 
-	if all || countTag {
-		tagCnts, err := repo.CountTagBy(r, tagSubStr, times)
+	if all || count {
+		tagCnts, err := stats.CountTagBy(repo, tagSubStr, times)
 		if err != nil {
 			return err
 		}
@@ -87,33 +88,26 @@ func tagExec(cmd *cobra.Command, args []string) error {
 		table.Render()
 	}
 
-	if all || countCommit {
-		taggedCommits, err := repo.CountCommit(r, tagSubStr)
-		if err != nil {
-			return err
-		}
-
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Tag", "Commit Count"})
-		for _, tc := range taggedCommits {
-			table.Append([]string{fmt.Sprint(tc.Tags), fmt.Sprint(tc.Cnt)})
-		}
-		fmt.Println("### Count commit number counted by tag")
-		table.Render()
+	if !(all || commitStat) {
+		return nil
 	}
 
-	if all || countInsAndDel {
-		result, err := repo.CountLine(r, tagSubStr)
-		if err != nil {
-			return err
-		}
+	tmpMap, err := stats.CountCommit(repo, tagSubStr)
+	if err != nil {
+		return err
+	}
+	stats, err := stats.GetStats(repo, tmpMap)
+	if err != nil {
+		return err
+	}
 
+	if all || commitStat {
 		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Revision", "Tag", "Insertions", "Deletions"})
-		for _, tc := range result {
-			table.Append([]string{tc.Oid.String(), fmt.Sprint(strings.Join(tc.Tags, ",")), fmt.Sprint(tc.Ins), fmt.Sprint(tc.Del)})
+		table.SetHeader([]string{"Revision", "Tag", "CommitNum", "Insertions", "Deletions"})
+		for _, s := range stats {
+			table.Append([]string{s.Oid.String(), fmt.Sprint(strings.Join(s.Tags, ",")), fmt.Sprint(s.Cnt), fmt.Sprint(s.Ins), fmt.Sprint(s.Del)})
 		}
-		fmt.Println("### Count insertions and deletions line number counted by tag")
+		fmt.Println("### summary of commit statistics summaried by tag")
 		table.Render()
 
 	}

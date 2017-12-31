@@ -1,4 +1,4 @@
-package repo
+package stats
 
 import (
 	"strings"
@@ -6,24 +6,17 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
-type CommitWithLine struct {
+type CommitStats struct {
 	Tags []string
 	Oid  *git.Oid
-	next *git.Oid
-	prev *git.Oid
+	Cnt  int // Number of commit
 	Ins  int
 	Del  int
-	Cnt  int
 }
 
-func CountLine(repo *git.Repository, str string) ([]CommitWithLine, error) {
-	cwl := []CommitWithLine{}
-	commitWithTagMap := map[string][]string{}
+func CountCommit(repo *git.Repository, tagSubStr string) (map[string][]string, error) {
+	taggedCommitMap := map[string][]string{}
 
-	// mutable
-	var tag_p *git.Oid
-	prev_tags := []string{}
-	next := &git.Oid{}
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {
@@ -31,69 +24,86 @@ func CountLine(repo *git.Repository, str string) ([]CommitWithLine, error) {
 	}
 
 	repo.Tags.Foreach(func(name string, oid *git.Oid) error {
-		shortName := strings.Replace(name, "refs/tags/", "", -1)
-		if strings.Contains(name, str) {
-			o, _ := repo.Lookup(oid)
-			switch o.Type() {
+		short := strings.Replace(name, "refs/tags/", "", -1)
+		if strings.Contains(short, tagSubStr) {
+			obj, _ := repo.Lookup(oid)
+			switch obj.Type() {
 			case git.ObjectTag: // For annotated tag
-				tag, _ := o.AsTag()
+				tag, _ := obj.AsTag()
 				revision := tag.TargetId().String()
-				commitWithTagMap[revision] = append(commitWithTagMap[revision], shortName)
+				taggedCommitMap[revision] = append(taggedCommitMap[revision], short)
 			case git.ObjectCommit: // For lightweight tag
-				revision := o.Id().String()
-				commitWithTagMap[revision] = append(commitWithTagMap[revision], shortName)
+				revision := obj.Id().String()
+				taggedCommitMap[revision] = append(taggedCommitMap[revision], short)
 			}
 		}
 		return nil
 	})
+	return taggedCommitMap, nil
+}
+
+func GetStats(repo *git.Repository, taggedCommitMap map[string][]string) ([]CommitStats, error) {
+	// mutable
+	commits := []CommitStats{}
+	tag_p := &git.Oid{}
+	prev_tags := []string{}
+	next := &git.Oid{}
+	cnt := 0
+
+	walk, _ := repo.Walk()
+	err := walk.PushHead()
+	if err != nil {
+		return nil, err
+	}
 
 	setFirst := func(c *git.Commit) bool {
-		if tags, ok := commitWithTagMap[c.Id().String()]; ok {
+		if tags, ok := taggedCommitMap[c.Id().String()]; ok {
 			tag_p = c.Id()
 			prev_tags = tags
 			return false
 		}
 		return true
 	}
+
 	walk.Iterate(setFirst)
 
 	defaultOpts, _ := git.DefaultDiffOptions()
 	defaultDiffOpts, _ := git.DefaultDiffFindOptions()
 
 	construct := func(c *git.Commit) bool {
-		if tags, ok := commitWithTagMap[c.Id().String()]; ok {
+		if tags, ok := taggedCommitMap[c.Id().String()]; ok {
 			childCommit, _ := repo.LookupCommit(tag_p)
 			ins, del, _ := getInsAndDel(repo, c, childCommit, &defaultOpts, &defaultDiffOpts)
-			cwl = append(cwl, CommitWithLine{
+
+			commits = append(commits, CommitStats{
 				Tags: prev_tags,
 				Oid:  tag_p,
-				next: next,
-				prev: c.Id(),
+				Cnt:  cnt,
 				Ins:  ins,
 				Del:  del,
 			})
-
 			next = tag_p
 			tag_p = c.Id()
 			prev_tags = tags
+			cnt = 0
+		} else {
+			cnt++
 		}
-
 		return true
 	}
 
 	err = walk.Iterate(construct)
-	cwl = append(cwl, CommitWithLine{
+	commits = append(commits, CommitStats{
 		Tags: prev_tags,
 		Oid:  tag_p,
-		next: next,
-		prev: nil,
-	})
+		Cnt:  cnt},
+	)
 
 	if err != nil {
 		return nil, nil
 	}
 
-	return cwl, nil
+	return commits, nil
 }
 
 func getInsAndDel(r *git.Repository, o, c *git.Commit, opts *git.DiffOptions, diffOpts *git.DiffFindOptions) (int, int, error) {
