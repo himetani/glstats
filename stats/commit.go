@@ -56,32 +56,44 @@ func (csi *CommitStatsIterator) cb(c *git.Commit) bool {
 	return true
 }
 
-func CountCommit(repo *git.Repository, tagSubStr string) (map[string][]string, error) {
-	taggedCommitMap := map[string][]string{}
+type TagIterator struct {
+	repo            *git.Repository
+	tagSubStr       string
+	taggedCommitMap map[string][]string
+}
 
+func (ti *TagIterator) cb(name string, oid *git.Oid) error {
+	short := strings.Replace(name, "refs/tags/", "", -1)
+	if strings.Contains(short, ti.tagSubStr) {
+		obj, _ := ti.repo.Lookup(oid)
+		switch obj.Type() {
+		case git.ObjectTag: // For annotated tag
+			tag, _ := obj.AsTag()
+			revision := tag.TargetId().String()
+			ti.taggedCommitMap[revision] = append(ti.taggedCommitMap[revision], short)
+		case git.ObjectCommit: // For lightweight tag
+			revision := obj.Id().String()
+			ti.taggedCommitMap[revision] = append(ti.taggedCommitMap[revision], short)
+		}
+	}
+	return nil
+}
+
+func CountCommit(repo *git.Repository, tagSubStr string) (map[string][]string, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {
 		return nil, err
 	}
 
-	repo.Tags.Foreach(func(name string, oid *git.Oid) error {
-		short := strings.Replace(name, "refs/tags/", "", -1)
-		if strings.Contains(short, tagSubStr) {
-			obj, _ := repo.Lookup(oid)
-			switch obj.Type() {
-			case git.ObjectTag: // For annotated tag
-				tag, _ := obj.AsTag()
-				revision := tag.TargetId().String()
-				taggedCommitMap[revision] = append(taggedCommitMap[revision], short)
-			case git.ObjectCommit: // For lightweight tag
-				revision := obj.Id().String()
-				taggedCommitMap[revision] = append(taggedCommitMap[revision], short)
-			}
-		}
-		return nil
-	})
-	return taggedCommitMap, nil
+	ti := &TagIterator{
+		repo:            repo,
+		tagSubStr:       tagSubStr,
+		taggedCommitMap: map[string][]string{},
+	}
+	repo.Tags.Foreach(ti.cb)
+
+	return ti.taggedCommitMap, nil
 }
 
 func GetStats(repo *git.Repository, taggedCommitMap map[string][]string) ([]CommitStats, error) {
