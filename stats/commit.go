@@ -14,6 +14,48 @@ type CommitStats struct {
 	Del  int
 }
 
+type CommitStatsIterator struct {
+	stats []CommitStats
+
+	// Passed to next invocation
+	cnt  int
+	tags []string
+	id   *git.Oid
+
+	diffOpts        git.DiffOptions
+	diffFindOpts    git.DiffFindOptions
+	taggedCommitMap map[string][]string
+	repo            *git.Repository
+}
+
+func (csi *CommitStatsIterator) cb(c *git.Commit) bool {
+	if tags, ok := csi.taggedCommitMap[c.Id().String()]; ok {
+		if csi.id == nil {
+			csi.id = c.Id()
+			csi.tags = tags
+			csi.cnt = 0
+			return true
+		}
+
+		childCommit, _ := csi.repo.LookupCommit(csi.id)
+		ins, del, _ := getInsAndDel(csi.repo, c, childCommit, &csi.diffOpts, &csi.diffFindOpts)
+
+		csi.stats = append(csi.stats, CommitStats{
+			Tags: csi.tags,
+			Oid:  csi.id,
+			Cnt:  csi.cnt,
+			Ins:  ins,
+			Del:  del,
+		})
+		csi.id = c.Id()
+		csi.tags = tags
+		csi.cnt = 0
+		return true
+	}
+	csi.cnt++
+	return true
+}
+
 func CountCommit(repo *git.Repository, tagSubStr string) (map[string][]string, error) {
 	taggedCommitMap := map[string][]string{}
 
@@ -43,67 +85,24 @@ func CountCommit(repo *git.Repository, tagSubStr string) (map[string][]string, e
 }
 
 func GetStats(repo *git.Repository, taggedCommitMap map[string][]string) ([]CommitStats, error) {
-	// mutable
-	commits := []CommitStats{}
-	tag_p := &git.Oid{}
-	prev_tags := []string{}
-	next := &git.Oid{}
-	cnt := 0
-
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {
 		return nil, err
 	}
 
-	setFirst := func(c *git.Commit) bool {
-		if tags, ok := taggedCommitMap[c.Id().String()]; ok {
-			tag_p = c.Id()
-			prev_tags = tags
-			return false
-		}
-		return true
-	}
-
-	walk.Iterate(setFirst)
-
 	defaultOpts, _ := git.DefaultDiffOptions()
 	defaultDiffOpts, _ := git.DefaultDiffFindOptions()
 
-	construct := func(c *git.Commit) bool {
-		if tags, ok := taggedCommitMap[c.Id().String()]; ok {
-			childCommit, _ := repo.LookupCommit(tag_p)
-			ins, del, _ := getInsAndDel(repo, c, childCommit, &defaultOpts, &defaultDiffOpts)
-
-			commits = append(commits, CommitStats{
-				Tags: prev_tags,
-				Oid:  tag_p,
-				Cnt:  cnt,
-				Ins:  ins,
-				Del:  del,
-			})
-			next = tag_p
-			tag_p = c.Id()
-			prev_tags = tags
-			cnt = 0
-		} else {
-			cnt++
-		}
-		return true
+	csi := &CommitStatsIterator{
+		diffOpts:        defaultOpts,
+		diffFindOpts:    defaultDiffOpts,
+		taggedCommitMap: taggedCommitMap,
+		repo:            repo,
 	}
+	err = walk.Iterate(csi.cb)
 
-	err = walk.Iterate(construct)
-	commits = append(commits, CommitStats{
-		Tags: prev_tags,
-		Oid:  tag_p,
-		Cnt:  cnt},
-	)
-
-	if err != nil {
-		return nil, nil
-	}
-
-	return commits, nil
+	return csi.stats, nil
 }
 
 func getInsAndDel(r *git.Repository, o, c *git.Commit, opts *git.DiffOptions, diffOpts *git.DiffFindOptions) (int, int, error) {
