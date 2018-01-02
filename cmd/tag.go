@@ -92,11 +92,11 @@ func tagExec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	tmpMap, err := stats.CountCommit(repo, tagSubStr)
+	taggedCommitMap, err := stats.GetTaggedCommitMap(repo, tagSubStr)
 	if err != nil {
 		return err
 	}
-	stats, err := stats.GetStats(repo, tmpMap)
+	stats, err := stats.GetStats(repo, taggedCommitMap)
 	if err != nil {
 		return err
 	}

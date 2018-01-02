@@ -1,31 +1,28 @@
 package stats
 
 import (
+	"reflect"
 	"testing"
 
 	git "github.com/libgit2/git2go"
 )
 
-func TestCommitCount(t *testing.T) {
+func TestGetTaggedCommitMap(t *testing.T) {
 	repo, _ := git.OpenRepository("../glstats-sample-submodule")
 
-	expected := []struct {
-		revision string
-		cnt      int
-	}{
-		{revision: "e7cec8f34445ef794e54c0d7f6bacef97d99bf5a", cnt: 2},
-		{revision: "264f0767fb0cb4f34eb49d63022a443cefb75783", cnt: 1},
-		{revision: "01bb16f3d083fa252c4476f6419a4b2761f4a839", cnt: 0},
+	expected := map[string][]string{
+		"264f0767fb0cb4f34eb49d63022a443cefb75783": []string{"deploy/20171123"},
+		"e7cec8f34445ef794e54c0d7f6bacef97d99bf5a": []string{"deploy/20171124"},
+		"0c254ca47f0924a4d0874c88499315a0987d8d3f": []string{"deploy/20180102"},
+		"01bb16f3d083fa252c4476f6419a4b2761f4a839": []string{"deploy/20171121"},
 	}
-	taggedCommits, err := CountCommit(repo, "deploy")
+
+	taggedCommitMap, err := GetTaggedCommitMap(repo, "deploy")
 	if err != nil {
-		t.Fatal("Analyze return non-nil\n")
+		t.Errorf("Before Test: unexpected error %s", err)
 	}
 
-	for i, tc := range taggedCommits {
-		if tc.Oid.String() != expected[i].revision || tc.Cnt != expected[i].cnt {
-			t.Fatalf("exected was %x, but was %x\n", expected[i], tc)
-		}
+	if !reflect.DeepEqual(expected, taggedCommitMap) {
+		t.Errorf("expected %q, got %q", expected, taggedCommitMap)
 	}
-
 }

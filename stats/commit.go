@@ -79,7 +79,7 @@ func (ti *TagIterator) cb(name string, oid *git.Oid) error {
 	return nil
 }
 
-func CountCommit(repo *git.Repository, tagSubStr string) (map[string][]string, error) {
+func GetTaggedCommitMap(repo *git.Repository, tagSubStr string) (map[string][]string, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
 	if err != nil {
