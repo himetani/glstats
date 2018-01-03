@@ -1,9 +1,10 @@
+sudo: true
 language: go
 go:
   - 1.9.2
 
-install:
-    ./install_libgit2.sh
+before_install:
+    - script/install_libgit2.sh
 
 script:
      - go test -v ./...
