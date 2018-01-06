@@ -16,6 +16,31 @@ const (
 	layout string = "200601021504"
 )
 
+type TagTimestampIterator struct {
+	repo       *git.Repository
+	timestamps []time.Time
+	tagSubstr  string
+}
+
+func (ti *TagTimestampIterator) cb(name string, oid *git.Oid) error {
+	if strings.Contains(name, ti.tagSubstr) {
+		var t time.Time
+		o, _ := ti.repo.Lookup(oid)
+		switch o.Type() {
+		// For annotated tag
+		case git.ObjectTag:
+			tag, _ := o.AsTag()
+			t = tag.Tagger().When
+		// For lightweight tag
+		case git.ObjectCommit:
+			commit, _ := o.AsCommit()
+			t = commit.Committer().When
+		}
+		ti.timestamps = append(ti.timestamps, t)
+	}
+	return nil
+}
+
 func CountTagBy(repo *git.Repository, tagSubstr string, times []time.Time) ([]Tag, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
@@ -40,25 +65,10 @@ func CountTagBy(repo *git.Repository, tagSubstr string, times []time.Time) ([]Ta
 }
 
 func getTagTimestamps(repo *git.Repository, tagSubstr string) []time.Time {
-	var timestamps []time.Time
-
-	repo.Tags.Foreach(func(name string, oid *git.Oid) error {
-		if strings.Contains(name, tagSubstr) {
-			var t time.Time
-
-			o, _ := repo.Lookup(oid)
-			switch o.Type() {
-			case git.ObjectTag: // For annotated tag
-				tag, _ := o.AsTag()
-				t = tag.Tagger().When
-			case git.ObjectCommit: // For lightweight tag
-				tstr := strings.Replace(name, "refs/tags/"+tagSubstr+"/", "", -1)
-				t, _ = time.Parse(layout, tstr)
-			}
-			timestamps = append(timestamps, t)
-		}
-		return nil
-	})
-
-	return timestamps
+	itr := &TagTimestampIterator{
+		repo:      repo,
+		tagSubstr: tagSubstr,
+	}
+	repo.Tags.Foreach(itr.cb)
+	return itr.timestamps
 }
