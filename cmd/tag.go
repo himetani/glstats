@@ -35,15 +35,16 @@ import (
 
 // countTagCmd represents the countTag command
 var tagCmd = &cobra.Command{
-	Use:   "tag [repoPath] [tagSubStr]",
-	Short: "Show stats by tag",
-	Long:  `Show stats by tag`,
+	Use:   "tag [repoPath]",
+	Short: "Show stats analyzed by tag",
+	Long:  `Show stats analyzed by tag`,
 }
 
 var (
 	all        bool
 	count      bool
 	commitStat bool
+	tagSubstr  string
 )
 
 func init() {
@@ -51,16 +52,16 @@ func init() {
 	tagCmd.Flags().BoolVar(&all, "all", false, "Show all stats(--count-tag, --count-commit, --count-ins-and-del)")
 	tagCmd.Flags().BoolVar(&count, "count", false, "Show the summary of tag number counted by month ")
 	tagCmd.Flags().BoolVar(&commitStat, "commit-stat", false, "Show the summary of commit statistics summaried by tag")
+	tagCmd.Flags().StringVarP(&tagSubstr, "tag-substr", "s", "", "tag substring to analyze")
 	RootCmd.AddCommand(tagCmd)
 }
 
 func tagExec(cmd *cobra.Command, args []string) error {
-	if len(args) != 2 {
+	if len(args) != 1 {
 		return errors.New("Argument are invlid")
 	}
 
 	repoPath := args[0]
-	tagSubStr := args[1]
 
 	times := GetTimesUntil(time.Now(), duration, MONTH)
 
@@ -74,7 +75,7 @@ func tagExec(cmd *cobra.Command, args []string) error {
 	}
 
 	if all || count {
-		tagCnts, err := stats.CountTagBy(repo, tagSubStr, times)
+		tagCnts, err := stats.CountTagBy(repo, tagSubstr, times)
 		if err != nil {
 			return err
 		}
@@ -92,7 +93,7 @@ func tagExec(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	taggedCommitMap, err := stats.GetTaggedCommitMap(repo, tagSubStr)
+	taggedCommitMap, err := stats.GetTaggedCommitMap(repo, tagSubstr)
 	if err != nil {
 		return err
 	}

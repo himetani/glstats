@@ -44,11 +44,10 @@ const (
 	YEAR
 )
 
-// RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "glstats",
-	Short: "Analyze git log data",
-	Long:  `Analyze git log data`,
+	Short: "Show git log stats data",
+	Long:  `Show git log stats data`,
 }
 
 func Execute() {
@@ -61,8 +60,8 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.glstats.yaml)")
-	RootCmd.PersistentFlags().IntVarP(&duration, "duration", "d", 12, "Duration to analyze (default is 12) ")
+	//RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.glstats.yaml)")
+	RootCmd.PersistentFlags().IntVarP(&duration, "duration", "d", 12, "Duration to analyze")
 	RootCmd.PersistentFlags().BoolVar(&dayFlag, "day", false, "Analyze by day (default is by month)")
 }
 
@@ -110,7 +109,7 @@ func GetTimesUntil(until time.Time, num int, durationType DurationType) []time.T
 		default:
 		}
 
-		if t.After(until) || t.Equal(until) {
+		if t.After(until) {
 			break
 		}
 		times = append(times, t)
