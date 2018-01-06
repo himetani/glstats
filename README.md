@@ -3,6 +3,8 @@ glstats
 
 `glstats` is command to show git log stats data.
 
+[![Build Status](https://travis-ci.org/himetani/glstats.svg?branch=master)](https://travis-ci.org/himetani/glstats)
+
 # Usage
 ```bash
 Usage:
