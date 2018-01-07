@@ -106,7 +106,7 @@ func tagExec(cmd *cobra.Command, args []string) error {
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetHeader([]string{"Revision", "Tag", "CommitNum", "Insertions", "Deletions"})
 		for _, s := range stats {
-			table.Append([]string{s.Oid.String(), fmt.Sprint(strings.Join(s.Tags, ",")), fmt.Sprint(s.Cnt), fmt.Sprint(s.Ins), fmt.Sprint(s.Del)})
+			table.Append([]string{s.Revision, fmt.Sprint(strings.Join(s.Tags, ",")), fmt.Sprint(s.Cnt), fmt.Sprint(s.Ins), fmt.Sprint(s.Del)})
 		}
 		fmt.Println("### summary of commit statistics summaried by tag")
 		table.Render()

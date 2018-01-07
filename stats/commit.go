@@ -7,11 +7,11 @@ import (
 )
 
 type CommitStats struct {
-	Tags []string
-	Oid  *git.Oid
-	Cnt  int // Number of commit
-	Ins  int
-	Del  int
+	Tags     []string
+	Revision string
+	Cnt      int // Number of commit
+	Ins      int
+	Del      int
 }
 
 type CommitStatsIterator struct {
@@ -41,17 +41,31 @@ func (csi *CommitStatsIterator) cb(c *git.Commit) bool {
 		ins, del, _ := getInsAndDel(csi.repo, c, childCommit, &csi.diffOpts, &csi.diffFindOpts)
 
 		csi.stats = append(csi.stats, CommitStats{
-			Tags: csi.tags,
-			Oid:  csi.id,
-			Cnt:  csi.cnt,
-			Ins:  ins,
-			Del:  del,
+			Tags:     csi.tags,
+			Revision: csi.id.String(),
+			Cnt:      csi.cnt,
+			Ins:      ins,
+			Del:      del,
 		})
 		csi.id = c.Id()
 		csi.tags = tags
 		csi.cnt = 0
 		return true
 	}
+
+	if c.Parent(0) == nil {
+		childCommit, _ := csi.repo.LookupCommit(csi.id)
+		ins, del, _ := getInsAndDel(csi.repo, c, childCommit, &csi.diffOpts, &csi.diffFindOpts)
+
+		csi.stats = append(csi.stats, CommitStats{
+			Tags:     csi.tags,
+			Revision: csi.id.String(),
+			Cnt:      csi.cnt,
+			Ins:      ins,
+			Del:      del,
+		})
+	}
+
 	csi.cnt++
 	return true
 }
