@@ -10,8 +10,7 @@ import (
 
 func TestCountTagBy(t *testing.T) {
 
-	repoPath := "../glstats-sample-submodule"
-	repo, _ := git.OpenRepository(repoPath)
+	repo, _ := git.OpenRepository("../glstats-sample-submodule")
 
 	t0 := time.Date(2017, time.Month(9), 1, 0, 0, 0, 0, time.Local)
 	t1 := time.Date(2017, time.Month(10), 1, 0, 0, 0, 0, time.Local)
@@ -25,12 +24,12 @@ func TestCountTagBy(t *testing.T) {
 		{Time: t2, Cnt: 3},
 	}
 
-	actual, err := CountTagBy(repo, "deploy", times)
+	result, err := CountTagBy(repo, "deploy", times)
 	if err != nil {
 		t.Fatal("Analyze returnen non-nil\n")
 	}
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("Actual was %x\n", actual)
+	if !reflect.DeepEqual(expected, result) {
+		t.Fatalf("expected %q, got %q\n", expected, result)
 	}
 }

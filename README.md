@@ -24,7 +24,7 @@ Flags:
 # Example
 ```bash
 % ./glstats tag ./glstats-sample-submodule
-### Cound tag by month
+### Count tag by month
 +---------+-------+
 |  MONTH  | COUNT |
 +---------+-------+
@@ -54,7 +54,7 @@ Flags:
 | 2017-12 |     2 |
 | 2018-01 |     0 |
 +---------+-------+
-### summary of commit statistics summaried by tag
+### summary of commit statistics by tag
 +------------------------------------------+-----------------+-----------+------------+-----------+
 |                 REVISION                 |       TAG       | COMMITNUM | INSERTIONS | DELETIONS |
 +------------------------------------------+-----------------+-----------+------------+-----------+

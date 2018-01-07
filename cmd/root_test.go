@@ -17,7 +17,7 @@ func TestGetByNow(t *testing.T) {
 	dates := GetTimesUntil(until, 3, MONTH)
 
 	if len(dates) != 4 {
-		t.Errorf("dates length should be %d, but %t\n", expected, dates)
+		t.Errorf("dates length should be %x, but %x\n", expected, dates)
 	}
 
 	for i, v := range dates {

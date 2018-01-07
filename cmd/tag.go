@@ -51,7 +51,7 @@ func init() {
 	tagCmd.RunE = tagExec
 	tagCmd.Flags().BoolVar(&all, "all", false, "Show all stats(--count-tag, --count-commit, --count-ins-and-del)")
 	tagCmd.Flags().BoolVar(&count, "count", false, "Show the summary of tag number counted by month ")
-	tagCmd.Flags().BoolVar(&commitStat, "commit-stat", false, "Show the summary of commit statistics summaried by tag")
+	tagCmd.Flags().BoolVar(&commitStat, "commit-stat", false, "Show the summary of commit statistics by tag")
 	tagCmd.Flags().StringVarP(&tagSubstr, "tag-substr", "s", "", "tag substring to analyze")
 	RootCmd.AddCommand(tagCmd)
 }
@@ -85,7 +85,7 @@ func tagExec(cmd *cobra.Command, args []string) error {
 			table.Append([]string{tc.Time.Format("2006-01"), fmt.Sprint(tc.Cnt)})
 		}
 
-		fmt.Println("### Cound tag by month")
+		fmt.Println("### Count tag by month")
 		table.Render()
 	}
 
@@ -106,7 +106,7 @@ func tagExec(cmd *cobra.Command, args []string) error {
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetHeader([]string{"Revision", "Tag", "CommitNum", "Insertions", "Deletions"})
 		for _, s := range stats {
-			table.Append([]string{s.Oid.String(), fmt.Sprint(strings.Join(s.Tags, ",")), fmt.Sprint(s.Cnt), fmt.Sprint(s.Ins), fmt.Sprint(s.Del)})
+			table.Append([]string{s.Revision, fmt.Sprint(strings.Join(s.Tags, ",")), fmt.Sprint(s.Cnt), fmt.Sprint(s.Ins), fmt.Sprint(s.Del)})
 		}
 		fmt.Println("### summary of commit statistics summaried by tag")
 		table.Render()
