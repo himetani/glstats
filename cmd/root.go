@@ -36,20 +36,27 @@ var (
 	dayFlag  bool
 )
 
+// DurationType is duration type used by summarying the git log data
 type DurationType int
 
 const (
+	// DAY is enum representing duration is day
 	DAY DurationType = iota
+	// MONTH is enum representing duration is month
 	MONTH
+	// YEAR is enum representing duration is year
 	YEAR
 )
 
+// RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "glstats",
 	Short: "Show git log stats data",
 	Long:  `Show git log stats data`,
 }
 
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -86,6 +93,8 @@ func initConfig() {
 	}
 }
 
+// GetTimesUntil returns slice of time.Time.
+// The slice of time.Time includes num time.Time and its duration is specified by durationType parameter.
 func GetTimesUntil(until time.Time, num int, durationType DurationType) []time.Time {
 	var since time.Time
 	var times []time.Time

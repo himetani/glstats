@@ -6,6 +6,7 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
+// CommitStats is struct having the stats data of the commit
 type CommitStats struct {
 	Tags     []string
 	Revision string
@@ -14,7 +15,7 @@ type CommitStats struct {
 	Del      int
 }
 
-type CommitStatsIterator struct {
+type commitStatsIterator struct {
 	stats []CommitStats
 
 	// Passed to next invocation
@@ -28,7 +29,7 @@ type CommitStatsIterator struct {
 	repo            *git.Repository
 }
 
-func (csi *CommitStatsIterator) cb(c *git.Commit) bool {
+func (csi *commitStatsIterator) cb(c *git.Commit) bool {
 	if tags, ok := csi.taggedCommitMap[c.Id().String()]; ok {
 		if csi.id == nil {
 			csi.id = c.Id()
@@ -70,13 +71,13 @@ func (csi *CommitStatsIterator) cb(c *git.Commit) bool {
 	return true
 }
 
-type TagIterator struct {
+type tagIterator struct {
 	repo            *git.Repository
 	tagSubStr       string
 	taggedCommitMap map[string][]string
 }
 
-func (ti *TagIterator) cb(name string, oid *git.Oid) error {
+func (ti *tagIterator) cb(name string, oid *git.Oid) error {
 	short := strings.Replace(name, "refs/tags/", "", -1)
 	if strings.Contains(short, ti.tagSubStr) {
 		obj, _ := ti.repo.Lookup(oid)
@@ -93,6 +94,7 @@ func (ti *TagIterator) cb(name string, oid *git.Oid) error {
 	return nil
 }
 
+// GetTaggedCommitMap returns the map which key is revision and the value is the slice of tags attatched to its revision.
 func GetTaggedCommitMap(repo *git.Repository, tagSubStr string) (map[string][]string, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
@@ -100,7 +102,7 @@ func GetTaggedCommitMap(repo *git.Repository, tagSubStr string) (map[string][]st
 		return nil, err
 	}
 
-	ti := &TagIterator{
+	ti := &tagIterator{
 		repo:            repo,
 		tagSubStr:       tagSubStr,
 		taggedCommitMap: map[string][]string{},
@@ -110,6 +112,7 @@ func GetTaggedCommitMap(repo *git.Repository, tagSubStr string) (map[string][]st
 	return ti.taggedCommitMap, nil
 }
 
+// GetStats returns slice of CommitsStats
 func GetStats(repo *git.Repository, taggedCommitMap map[string][]string) ([]CommitStats, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
@@ -120,7 +123,7 @@ func GetStats(repo *git.Repository, taggedCommitMap map[string][]string) ([]Comm
 	defaultOpts, _ := git.DefaultDiffOptions()
 	defaultDiffOpts, _ := git.DefaultDiffFindOptions()
 
-	csi := &CommitStatsIterator{
+	csi := &commitStatsIterator{
 		diffOpts:        defaultOpts,
 		diffFindOpts:    defaultDiffOpts,
 		taggedCommitMap: taggedCommitMap,
