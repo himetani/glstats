@@ -7,6 +7,7 @@ import (
 	git "github.com/libgit2/git2go"
 )
 
+// Tag is struct hold stats data of Tag
 type Tag struct {
 	Time time.Time
 	Cnt  int
@@ -16,13 +17,13 @@ const (
 	layout string = "200601021504"
 )
 
-type TagTimestampIterator struct {
+type tagTimestampIterator struct {
 	repo       *git.Repository
 	timestamps []time.Time
 	tagSubstr  string
 }
 
-func (ti *TagTimestampIterator) cb(name string, oid *git.Oid) error {
+func (ti *tagTimestampIterator) cb(name string, oid *git.Oid) error {
 	if strings.Contains(name, ti.tagSubstr) {
 		var t time.Time
 		o, _ := ti.repo.Lookup(oid)
@@ -41,6 +42,7 @@ func (ti *TagTimestampIterator) cb(name string, oid *git.Oid) error {
 	return nil
 }
 
+// CountTagBy returns slice of Tag
 func CountTagBy(repo *git.Repository, tagSubstr string, times []time.Time) ([]Tag, error) {
 	walk, _ := repo.Walk()
 	err := walk.PushHead()
@@ -65,7 +67,7 @@ func CountTagBy(repo *git.Repository, tagSubstr string, times []time.Time) ([]Ta
 }
 
 func getTagTimestamps(repo *git.Repository, tagSubstr string) []time.Time {
-	itr := &TagTimestampIterator{
+	itr := &tagTimestampIterator{
 		repo:      repo,
 		tagSubstr: tagSubstr,
 	}
