@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/spf13/cobra"
 )
@@ -39,7 +40,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version number of glstats",
 	Long:  `Print the version number of glstats`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("glstats %s, revision: %s\n", Version, Revision)
+		fmt.Printf("glstats %s, revision: %s, %s/%s \n", Version, Revision, runtime.GOOS, runtime.GOARCH)
 	},
 }
 
